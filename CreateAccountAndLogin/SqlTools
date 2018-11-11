@@ -1,0 +1,79 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class SqlTools
+{
+
+    public static String insert(User aUser)
+    {
+        Connection conn = DBConn.connToDb();
+
+        PreparedStatement ps = null;
+
+        String queryInsert = "INSERT INTO new_users(firstname, lastname, username, upassword) VALUES (?,?,?,?)";
+
+        try
+        {
+            ps = conn.prepareStatement(queryInsert);
+
+            ps.setString(1, aUser.getFirstName());
+            ps.setString(2,aUser.getLastName());
+            ps.setString(3,aUser.getUserName());
+            ps.setString(4,aUser.getUserPassword());
+
+            ps.executeUpdate();
+
+            return "hello";
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+
+            return e.getMessage();
+        }
+
+        finally
+        {
+            DBConn.closePreparedStatement(ps);
+        }
+    }
+
+    public static boolean authenticateLogin(String strUname, String strUpass)
+    {
+        boolean isValid = false;
+
+        Connection conn = DBConn.connToDb();
+
+        PreparedStatement ps = null;
+
+
+        String querySelect = "SELECT * FROM new_users WHERE username=? AND upassword=?";
+
+        try
+        {
+            ps = conn.prepareStatement(querySelect);
+
+            ps.setString(1, strUname);
+            ps.setString(2, strUpass);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next())
+            {
+                System.out.println("User login is valid");
+                isValid = true;
+            }
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+
+        finally
+        {
+            DBConn.closePreparedStatement(ps);
+        }
+
+        return isValid;
+    }
+}
