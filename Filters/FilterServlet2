@@ -1,0 +1,48 @@
+import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+
+@WebFilter(filterName = "FilterServlet2")
+public class FilterServlet2 implements Filter
+{
+    public void destroy()
+    {
+    }
+
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException
+    {
+        ArrayList<User> maList = new ArrayList<>();
+
+        maList.add(new User("tony","tony@yahoo.com"));
+        maList.add(new User("anna","anna@yahoo.com"));
+        maList.add(new User("smith","smith@yahoo.com"));
+
+        String fname = req.getParameter("fname");
+        String email = req.getParameter("email");
+
+        User user = new User(fname,email);
+
+        for (User person:maList)
+        {
+            if (fname.equals(person.getFname()) && email.equals(person.getEmail()))
+            {
+                chain.doFilter(req,resp);
+            }
+            else
+            {
+                HttpServletResponse rsp = (HttpServletResponse) resp;
+                rsp.sendRedirect("/index.jsp");
+                return;
+            }
+
+        }
+    }
+
+    public void init(FilterConfig config) throws ServletException
+    {
+
+    }
+
+}
