@@ -1,0 +1,112 @@
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(name = "MainServlet")
+public class MainServlet extends HttpServlet
+{
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        String url = "/index.html";
+
+        String fromWhere = request.getParameter("guess");
+
+        String msg = "";
+
+        if (fromWhere.equals("goToLogIn"))
+        {
+            url = "/logIn.jsp";
+
+            msg = "Please login";
+            request.setAttribute("msg",msg);
+
+        }
+
+        if (fromWhere.equals("goToRegister"))
+        {
+            url="/register.jsp";
+            msg = "Please register";
+            request.setAttribute("msg",msg);
+        }
+
+        if (fromWhere.equals("signUp"))
+        {
+            String fn = request.getParameter("firstName");
+            String ln = request.getParameter("lastName");
+            String un = request.getParameter("userN");
+            String pw = request.getParameter("passU");
+
+            pw = Encrypt.AlgMD5(pw);
+
+            User u1 = new User(fn, ln, un, pw);
+
+            boolean alreadyExists = SqlTools.authenticateLogin(un,pw);
+            //Check if the username already exists
+            //if it doesn't exist insert into database and send to the login page
+            if(!alreadyExists)
+            {
+                SqlTools.insert(u1);
+
+                request.setAttribute("aUser", u1);
+
+                url = "/logIn.jsp";
+
+                msg = "Thank for registering! Please log in";
+
+                request.setAttribute("msg", msg);
+            }
+            //if it exists tell them to try again
+            else
+            {
+                url = "/register.jsp";
+                msg = "The username and password already exist. Please try again.";
+                request.setAttribute("msg",msg);
+            }
+        }
+
+        if (fromWhere.equals("logIn"))
+        {
+            String un = request.getParameter("userN");
+            String pw = request.getParameter("passU");
+            pw = Encrypt.AlgMD5(pw);
+
+            boolean isValid;
+
+            try
+            {
+                isValid = SqlTools.authenticateLogin(un,pw);
+                if (isValid)
+                {
+                    msg = "Great job loging in!";
+                    request.setAttribute("userN", un);
+                    request.setAttribute("passU",pw);
+                    request.setAttribute("msg",msg);
+                    url = "/confirmation.jsp";
+
+
+                }
+                else
+                {
+                    msg = "Something went wrong. Please try again or click on the register button";
+                    request.setAttribute("msg",msg);
+                    url = "/logIn.jsp";
+
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        getServletContext().getRequestDispatcher(url).forward(request,response);
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        doPost(request,response);
+    }
+}
